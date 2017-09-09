@@ -1,0 +1,187 @@
+004-005 @READ_PROGRAM_MEMORY8.P1
+004-005 @WRITE_PROGRAM_MEMORY8.P2
+008     PSP_DATA
+009     porte
+009.0   rs
+009.1   enable
+015     CCP_1_LOW
+015-016 CCP_1
+016     CCP_1_HIGH
+01B     CCP_2_LOW
+01B-01C CCP_2
+01C     CCP_2_HIGH
+020     @INTERRUPT_AREA
+021     @INTERRUPT_AREA
+022     @INTERRUPT_AREA
+023     @INTERRUPT_AREA
+024     @INTERRUPT_AREA
+025     @INTERRUPT_AREA
+026     @INTERRUPT_AREA
+027     @INTERRUPT_AREA
+028-02D buffer
+02E     DUTY
+02F     i
+030     temp1
+031-032 SAIDA
+033-036 UNIDADE
+037-038 leitura_velocidade.cont
+037-038 pwm_ventilador.Duty2
+037     beep.cont
+037-038 pwm_resistor.Duty2
+037-038 leitura_temperatura.conv
+037     @PSTRINGC7_84.@SCRATCH1
+037     buffer_serial.@SCRATCH1
+038     beep.i
+038     @PSTRINGC7_84.@SCRATCH2
+038     buffer_serial.@SCRATCH2
+039     beep.j
+039-03C @SFTOI.P1
+039     leitura_temperatura.@SCRATCH1
+039     leitura_velocidade.@SCRATCH1
+039     @PSTRINGC7_84.@SCRATCH3
+03A     @delay_ms1.P1
+03A     leitura_temperatura.@SCRATCH2
+03A     @PSTRINGC7_84.@SCRATCH4
+03B-03C @ITOF.P1
+03B-03E @MULFF.P2
+03F-042 @MULFF.P1
+043     @MULFF.@SCRATCH1
+044     @MULFF.@SCRATCH2
+045     @MULFF.@SCRATCH3
+046     @MULFF.@SCRATCH4
+047     @MULFF.@SCRATCH5
+048     @PSTRINGCN7_84.P1
+048     comando_lcd.caracter
+048     @PRINTF_D_84.P1
+048-049 @PRINTF_LU_84.P2
+048     @PSTRINGR_84.@SCRATCH1
+049     @PRINTF_D_84.P1
+049     @PSTRINGR_84.@SCRATCH2
+049     @PSTRINGCN7_84.@SCRATCH1
+04A     @PRINTF_LU_84.@SCRATCH1
+04A     @PSTRINGCN7_84.@SCRATCH2
+04A     @PRINTF_D_84.@SCRATCH1
+04B     @PRINTF_LU_84.@SCRATCH2
+04B     @PSTRINGCN7_84.@SCRATCH3
+04B     @PRINTF_D_84.@SCRATCH2
+04C     @PRINTF_LU_84.@SCRATCH3
+04C     @PSTRINGCN7_84.@SCRATCH4
+04C     @PRINTF_D_84.@SCRATCH3
+04D     @PRINTF_LU_84.@SCRATCH4
+04D     @PRINTF_D_84.@SCRATCH4
+04E     @DIV88.P1
+04E     @PRINTF_LU_84.@SCRATCH5
+04F     @DIV88.P1
+04F     @PRINTF_LU_84.@SCRATCH6
+050     @PRINTF_LU_84.@SCRATCH7
+050     @DIV88.@SCRATCH1
+051     escreve_lcd.caracter
+077     @SCRATCH
+078     @SCRATCH
+078     _RETURN_
+079     @SCRATCH
+07A     @SCRATCH
+07F     @INTERRUPT_AREA
+09C.6   C1OUT
+09C.7   C2OUT
+0FF     @INTERRUPT_AREA
+10D-10E @READ_PROGRAM_MEMORY8.P1
+10D-10E @WRITE_PROGRAM_MEMORY8.P2
+17F     @INTERRUPT_AREA
+1FF     @INTERRUPT_AREA
+27F     @INTERRUPT_AREA
+2FF     @INTERRUPT_AREA
+37F     @INTERRUPT_AREA
+3FF     @INTERRUPT_AREA
+47F     @INTERRUPT_AREA
+4FF     @INTERRUPT_AREA
+57F     @INTERRUPT_AREA
+5FF     @INTERRUPT_AREA
+67F     @INTERRUPT_AREA
+6FF     @INTERRUPT_AREA
+77F     @INTERRUPT_AREA
+7FF     @INTERRUPT_AREA
+87F     @INTERRUPT_AREA
+8FF     @INTERRUPT_AREA
+97F     @INTERRUPT_AREA
+9FF     @INTERRUPT_AREA
+A7F     @INTERRUPT_AREA
+AFF     @INTERRUPT_AREA
+B7F     @INTERRUPT_AREA
+BFF     @INTERRUPT_AREA
+C7F     @INTERRUPT_AREA
+CFF     @INTERRUPT_AREA
+D7F     @INTERRUPT_AREA
+DFF     @INTERRUPT_AREA
+E7F     @INTERRUPT_AREA
+EFF     @INTERRUPT_AREA
+F7F     @INTERRUPT_AREA
+FFF     @INTERRUPT_AREA
+
+ROM Allocation:
+0001D3  @delay_ms1
+0004A0  beep
+000057  comando_lcd
+000064  escreve_lcd
+0002AC  limpa_lcd
+00027F  inicializa_lcd
+000089  tela_principal
+000092  @PRINTF_LU_84
+0000F7  @PSTRINGR_84
+00002F  @const93
+00011B  @PSTRINGCN7_84
+000071  @DIV88
+000172  @PRINTF_D_84
+000421  pwm_ventilador
+0002F7  @ITOF
+000314  @MULFF
+000389  @SFTOI
+0003A8  pwm_resistor
+0003DE  leitura_temperatura
+000457  leitura_velocidade
+000488  parar_ventilador
+000034  @const118
+0001EB  @PSTRINGC7_84
+0004C0  parar_calor
+00003D  @const121
+00047B  alterar
+0004E1  @goto10229
+0004ED  buffer_serial
+000242  config
+000046  @const126
+00004F  @const127
+000506  MAIN
+000086  trata_int_tmr0
+000506  @cinit1
+000519  @cinit2
+
+Project Directory:
+    C:\Users\Francisco Marcolino\OneDrive\McLab2\
+
+Project Files:
+    codigo2017.c                                            [10-mai-17 16:07  CRC=C64DD58C]
+    ..\..\..\..\Program Files (x86)\PICC\devices\16f877A.h  [20-ago-08 16:02  CRC=03858728]
+
+Source signature=CD58E3DC
+
+Units:
+    codigo2017 (main)
+
+Compiler Settings:
+    Processor:      PIC16F877A
+    Pointer Size:   16
+    ADC Range:      0-1023
+    Opt Level:      9
+    Short,Int,Long: UNSIGNED: 1,8,16
+    Float,Double:   32,32
+
+Output Files:
+    Errors:      codigo2017.err
+    Ext Symbols: codigo2017.esym
+    INHX8:       codigo2017.hex
+    Symbols:     codigo2017.sym
+    List:        codigo2017.lst
+    Debug/COFF:  codigo2017.cof
+    Project:     codigo2017.PJT
+    Call Tree:   codigo2017.tre
+    Statistics:  codigo2017.STA

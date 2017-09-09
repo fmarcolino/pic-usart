@@ -1,0 +1,5 @@
+>>> Warning 216 "codigo2017.c" Line 319(0,1): Interrupts disabled during call to prevent re-entrancy:  (escreve_lcd)
+>>> Warning 216 "codigo2017.c" Line 319(0,1): Interrupts disabled during call to prevent re-entrancy:  (comando_lcd)
+      Memory usage:   ROM=16%      RAM=8% - 15%
+      0 Errors,  2 Warnings.
+Build Successful.

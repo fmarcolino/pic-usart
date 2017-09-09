@@ -1,0 +1,1046 @@
+CCS PCM C Compiler, Version 4.140, 14471               24-mai-17 17:20
+
+               Filename:   C:\Users\Francisco Marcolino\OneDrive\McLab2\codigo2017.lst
+
+               ROM used:   1310 words (16%)
+                           Largest free fragment is 2048
+               RAM used:   28 (8%) at main() level
+                           55 (15%) worst case
+               Stack:     6 worst case (4 in main + 2 for interrupts)
+
+*
+0000:  MOVLW  05
+0001:  MOVWF  0A
+0002:  GOTO   506
+0003:  NOP
+0004:  MOVWF  7F
+0005:  SWAPF  03,W
+0006:  CLRF   03
+0007:  MOVWF  21
+0008:  MOVF   0A,W
+0009:  MOVWF  20
+000A:  CLRF   0A
+000B:  MOVF   04,W
+000C:  MOVWF  22
+000D:  MOVF   77,W
+000E:  MOVWF  23
+000F:  MOVF   78,W
+0010:  MOVWF  24
+0011:  MOVF   79,W
+0012:  MOVWF  25
+0013:  MOVF   7A,W
+0014:  MOVWF  26
+0015:  BCF    03.7
+0016:  BCF    03.5
+0017:  BTFSS  0B.5
+0018:  GOTO   01B
+0019:  BTFSC  0B.2
+001A:  GOTO   02C
+001B:  MOVF   22,W
+001C:  MOVWF  04
+001D:  MOVF   23,W
+001E:  MOVWF  77
+001F:  MOVF   24,W
+0020:  MOVWF  78
+0021:  MOVF   25,W
+0022:  MOVWF  79
+0023:  MOVF   26,W
+0024:  MOVWF  7A
+0025:  MOVF   20,W
+0026:  MOVWF  0A
+0027:  SWAPF  21,W
+0028:  MOVWF  03
+0029:  SWAPF  7F,F
+002A:  SWAPF  7F,W
+002B:  RETFIE
+002C:  BCF    0A.3
+002D:  BCF    0A.4
+002E:  GOTO   086
+.................... #include <16f877A.h> 
+.................... //////// Standard Header file for the PIC16F877A device //////////////// 
+.................... #device PIC16F877A 
+.................... #list 
+....................  
+.................... #DEVICE 	ADC=10 
+.................... #fuses    xt,nowdt,noprotect,put,brownout,nolvp,nocpd,nowrt// configuração dos fusíveis 
+.................... #use      delay(clock=4000000, RESTART_WDT) 
+*
+01D3:  MOVLW  3A
+01D4:  MOVWF  04
+01D5:  BCF    03.7
+01D6:  MOVF   00,W
+01D7:  BTFSC  03.2
+01D8:  GOTO   1EA
+01D9:  MOVLW  01
+01DA:  MOVWF  78
+01DB:  MOVLW  BF
+01DC:  MOVWF  77
+01DD:  CLRWDT
+01DE:  DECFSZ 77,F
+01DF:  GOTO   1DD
+01E0:  DECFSZ 78,F
+01E1:  GOTO   1DB
+01E2:  MOVLW  4A
+01E3:  MOVWF  77
+01E4:  DECFSZ 77,F
+01E5:  GOTO   1E4
+01E6:  NOP
+01E7:  CLRWDT
+01E8:  DECFSZ 00,F
+01E9:  GOTO   1D9
+01EA:  RETURN
+....................  
+.................... // Configurando Porta Serial 
+.................... #use rs232(baud=19200, xmit=pin_c6, rcv=pin_c7, BRGH1OK) 
+....................  
+....................  
+.................... #use   fast_io(a) 
+.................... #use   fast_io(b) 
+.................... #use   fast_io(c) 
+.................... #use   fast_io(d) 
+.................... #use   fast_io(e) 
+....................  
+.................... #byte   porte =   0x09 
+....................  
+....................  
+.................... #bit rs = porte.0        // via do Lcd que sinaliza recepção de dados ou comando 
+.................... #bit enable = porte.1    // enable do Lcd 
+....................  
+....................  
+.................... int buffer[6];               // Recebe o envio via RS - 232 
+.................... int DUTY,i,temp1; 
+.................... int16 SAIDA; 
+.................... char UNIDADE[4]; 
+....................  
+....................  
+.................... void beep(int cont) 
+.................... { 
+.................... 	for (int i=0; i<cont; ++i) 
+*
+04A0:  CLRF   38
+04A1:  MOVF   37,W
+04A2:  SUBWF  38,W
+04A3:  BTFSC  03.0
+04A4:  GOTO   4BD
+.................... 	{ 
+.................... 		delay_ms(200); 
+04A5:  MOVLW  C8
+04A6:  MOVWF  3A
+04A7:  CALL   1D3
+.................... 		for(int j=0; j<100; ++j) 
+04A8:  CLRF   39
+04A9:  MOVF   39,W
+04AA:  SUBLW  63
+04AB:  BTFSS  03.0
+04AC:  GOTO   4BB
+.................... 		{ 
+.................... 			output_high(pin_a5); 
+04AD:  BSF    05.5
+.................... 			delay_ms(1); 
+04AE:  MOVLW  01
+04AF:  MOVWF  3A
+04B0:  CALL   1D3
+.................... 			output_low(pin_a5); 
+04B1:  BCF    05.5
+.................... 			delay_us(500); 
+04B2:  CLRWDT
+04B3:  MOVLW  A5
+04B4:  MOVWF  77
+04B5:  DECFSZ 77,F
+04B6:  GOTO   4B5
+04B7:  GOTO   4B8
+04B8:  NOP
+.................... 		} 
+04B9:  INCF   39,F
+04BA:  GOTO   4A9
+.................... 	} 
+04BB:  INCF   38,F
+04BC:  GOTO   4A1
+.................... }	 
+.................... void comando_lcd(int caracter){ 
+.................... 	rs = 0;                              // seleciona o envio de um comando 
+*
+0057:  BCF    09.0
+.................... 	output_d(caracter);                    // carrega o portd com o caracter 
+0058:  MOVF   48,W
+0059:  MOVWF  08
+.................... 	enable = 1 ;                         // gera pulso no enable 
+005A:  BSF    09.1
+.................... 	delay_us(1);                         // espera l microsegundo 
+005B:  CLRWDT
+.................... 	enable = 0;                           // desce o pino de enable 
+005C:  BCF    09.1
+.................... 	delay_us(40);                        // espera minimo 40 microsegundos 
+005D:  CLRWDT
+005E:  MOVLW  0C
+005F:  MOVWF  77
+0060:  DECFSZ 77,F
+0061:  GOTO   060
+0062:  GOTO   063
+.................... 	return;                              // retorna  
+.................... } 
+0063:  RETURN
+....................  
+.................... void escreve_lcd(int caracter) 
+.................... { 
+.................... 	rs = 1;                            // seleciona o envio de um DADO  
+0064:  BSF    09.0
+.................... 	output_d(caracter);                  // carrega o portd com o caracter  
+0065:  MOVF   51,W
+0066:  MOVWF  08
+.................... 	enable =1;                         // gera pulso no enable 
+0067:  BSF    09.1
+.................... 	delay_us(1);                       // espera l microsegundo 
+0068:  CLRWDT
+.................... 	enable = 0;                         // desce o pino de enable 
+0069:  BCF    09.1
+.................... 	delay_us(40);                      // espera minimo 40 microsegundos 
+006A:  CLRWDT
+006B:  MOVLW  0C
+006C:  MOVWF  77
+006D:  DECFSZ 77,F
+006E:  GOTO   06D
+006F:  GOTO   070
+.................... 	return;                            // retorna  
+.................... } 
+0070:  RETURN
+....................  
+.................... void limpa_lcd(){ 
+.................... 	comando_lcd(0x01); 
+*
+02B0:  MOVLW  01
+02B1:  MOVWF  48
+02B2:  CALL   057
+02B3:  BTFSC  27.7
+02B4:  BSF    0B.7
+.................... 	delay_ms(2); 
+02B5:  MOVLW  02
+02B6:  MOVWF  3A
+02B7:  CALL   1D3
+.................... 	return;  
+02B8:  CLRF   27
+02B9:  BTFSC  0B.7
+02BA:  BSF    27.7
+02BB:  BCF    0B.7
+.................... } 
+....................  
+.................... void inicializa_lcd() { 
+.................... 	comando_lcd(0x30);              // envia comando para inicializar display 
+*
+0283:  MOVLW  30
+0284:  MOVWF  48
+0285:  CALL   057
+0286:  BTFSC  27.7
+0287:  BSF    0B.7
+.................... 	delay_ms(4);                    // espera 4 milisengundos 
+0288:  MOVLW  04
+0289:  MOVWF  3A
+028A:  CALL   1D3
+028B:  CLRF   27
+028C:  BTFSC  0B.7
+028D:  BSF    27.7
+028E:  BCF    0B.7
+.................... 	comando_lcd(0x30);              // envia comando para inicializar display 
+028F:  MOVLW  30
+0290:  MOVWF  48
+0291:  CALL   057
+0292:  BTFSC  27.7
+0293:  BSF    0B.7
+.................... 	delay_us(100);                  // espera 100 microsengundos 
+0294:  CLRWDT
+0295:  MOVLW  20
+0296:  MOVWF  77
+0297:  DECFSZ 77,F
+0298:  GOTO   297
+0299:  GOTO   29A
+029A:  CLRF   27
+029B:  BTFSC  0B.7
+029C:  BSF    27.7
+029D:  BCF    0B.7
+.................... 	comando_lcd(0x30);              // envia comando para inicializar display 
+029E:  MOVLW  30
+029F:  MOVWF  48
+02A0:  CALL   057
+02A1:  BTFSC  27.7
+02A2:  BSF    0B.7
+02A3:  CLRF   27
+02A4:  BTFSC  0B.7
+02A5:  BSF    27.7
+02A6:  BCF    0B.7
+.................... 	comando_lcd(0x38);              // liga o display, sem cursor e sem blink 
+02A7:  MOVLW  38
+02A8:  MOVWF  48
+02A9:  CALL   057
+02AA:  BTFSC  27.7
+02AB:  BSF    0B.7
+02AC:  CLRF   27
+02AD:  BTFSC  0B.7
+02AE:  BSF    27.7
+02AF:  BCF    0B.7
+.................... 	limpa_lcd() ;                   // limpa Lcd 
+.................... 	comando_lcd(0x0c);              // display sem cursor 
+*
+02BC:  MOVLW  0C
+02BD:  MOVWF  48
+02BE:  CALL   057
+02BF:  BTFSC  27.7
+02C0:  BSF    0B.7
+02C1:  CLRF   27
+02C2:  BTFSC  0B.7
+02C3:  BSF    27.7
+02C4:  BCF    0B.7
+.................... 	comando_lcd(0x06);              // desloca cursor para a direita  
+02C5:  MOVLW  06
+02C6:  MOVWF  48
+02C7:  CALL   057
+02C8:  BTFSC  27.7
+02C9:  BSF    0B.7
+.................... 	return;                         // retorna 
+.................... } 
+....................  
+....................  
+.................... void tela_principal(){ 
+.................... 	//Atualizar informações no lcd 
+.................... 	 
+.................... 	comando_lcd(0xC0);                   // posiciona o cursor na linha 1, coluna 0 
+*
+0089:  MOVLW  C0
+008A:  MOVWF  48
+008B:  CALL   057
+.................... 	printf (escreve_lcd,"%4Lu%3s ",SAIDA,UNIDADE); // imprime mensagem no Lcd 
+008C:  MOVLW  01
+008D:  MOVWF  04
+008E:  MOVF   32,W
+008F:  MOVWF  49
+0090:  MOVF   31,W
+0091:  MOVWF  48
+*
+00F4:  MOVLW  33
+00F5:  MOVWF  04
+00F6:  BCF    03.7
+*
+010C:  MOVLW  20
+010D:  MOVWF  51
+010E:  CALL   064
+.................... 	comando_lcd(0xC8);                   // posiciona o cursor na linha 1, coluna 8 
+010F:  MOVLW  C8
+0110:  MOVWF  48
+0111:  CALL   057
+.................... 	printf (escreve_lcd,"PWM %3d%%",DUTY);            // imprime mensagem no Lcd 
+0112:  MOVLW  2F
+0113:  BSF    03.6
+0114:  MOVWF  0D
+0115:  MOVLW  00
+0116:  MOVWF  0F
+0117:  BCF    03.0
+0118:  MOVLW  04
+0119:  BCF    03.6
+011A:  MOVWF  48
+*
+016E:  MOVF   2E,W
+016F:  MOVWF  48
+0170:  MOVLW  13
+0171:  MOVWF  49
+*
+01C8:  MOVLW  25
+01C9:  MOVWF  51
+01CA:  CALL   064
+.................... 	 
+.................... 	return;                              // retorna da função 
+.................... } 
+....................  
+.................... void leitura_velocidade(); 
+.................... void leitura_temperatura(); 
+.................... void pwm_ventilador(){ 
+.................... 	 
+.................... 	int16 Duty2; 
+.................... 	 
+.................... 	DUTY = buffer[1]; 
+*
+0421:  MOVF   29,W
+0422:  MOVWF  2E
+.................... 	Duty2 = DUTY*10.0; 
+0423:  CLRF   3C
+0424:  MOVF   2E,W
+0425:  MOVWF  3B
+0426:  CALL   2F7
+0427:  MOVF   7A,W
+0428:  MOVWF  3E
+0429:  MOVF   79,W
+042A:  MOVWF  3D
+042B:  MOVF   78,W
+042C:  MOVWF  3C
+042D:  MOVF   77,W
+042E:  MOVWF  3B
+042F:  CLRF   42
+0430:  CLRF   41
+0431:  MOVLW  20
+0432:  MOVWF  40
+0433:  MOVLW  82
+0434:  MOVWF  3F
+0435:  CALL   314
+0436:  MOVF   7A,W
+0437:  MOVWF  3C
+0438:  MOVF   79,W
+0439:  MOVWF  3B
+043A:  MOVF   78,W
+043B:  MOVWF  3A
+043C:  MOVF   77,W
+043D:  MOVWF  39
+043E:  CALL   389
+043F:  MOVF   79,W
+0440:  MOVWF  38
+0441:  MOVF   78,W
+0442:  MOVWF  37
+.................... 	 
+.................... 	set_pwm2_duty((int16)Duty2); 
+0443:  MOVF   38,W
+0444:  MOVWF  79
+0445:  MOVF   37,W
+0446:  MOVWF  78
+0447:  RRF    79,F
+0448:  RRF    78,F
+0449:  RRF    79,F
+044A:  RRF    78,F
+044B:  RRF    79,F
+044C:  MOVF   78,W
+044D:  MOVWF  1B
+044E:  RRF    79,F
+044F:  RRF    79,W
+0450:  ANDLW  30
+0451:  MOVWF  77
+0452:  MOVF   1D,W
+0453:  ANDLW  CF
+0454:  IORWF  77,W
+0455:  MOVWF  1D
+.................... } 
+0456:  RETURN
+....................  
+....................  
+.................... void pwm_resistor(){ 
+.................... 	 
+.................... 	int16 Duty2; 
+.................... 	 
+.................... 	DUTY = buffer[1]; 
+*
+03A8:  MOVF   29,W
+03A9:  MOVWF  2E
+.................... 	Duty2 = DUTY*10.0; 
+03AA:  CLRF   3C
+03AB:  MOVF   2E,W
+03AC:  MOVWF  3B
+03AD:  CALL   2F7
+03AE:  MOVF   7A,W
+03AF:  MOVWF  3E
+03B0:  MOVF   79,W
+03B1:  MOVWF  3D
+03B2:  MOVF   78,W
+03B3:  MOVWF  3C
+03B4:  MOVF   77,W
+03B5:  MOVWF  3B
+03B6:  CLRF   42
+03B7:  CLRF   41
+03B8:  MOVLW  20
+03B9:  MOVWF  40
+03BA:  MOVLW  82
+03BB:  MOVWF  3F
+03BC:  CALL   314
+03BD:  MOVF   7A,W
+03BE:  MOVWF  3C
+03BF:  MOVF   79,W
+03C0:  MOVWF  3B
+03C1:  MOVF   78,W
+03C2:  MOVWF  3A
+03C3:  MOVF   77,W
+03C4:  MOVWF  39
+03C5:  CALL   389
+03C6:  MOVF   79,W
+03C7:  MOVWF  38
+03C8:  MOVF   78,W
+03C9:  MOVWF  37
+.................... 	 
+.................... 	set_pwm1_duty((int16)Duty2); 
+03CA:  MOVF   38,W
+03CB:  MOVWF  79
+03CC:  MOVF   37,W
+03CD:  MOVWF  78
+03CE:  RRF    79,F
+03CF:  RRF    78,F
+03D0:  RRF    79,F
+03D1:  RRF    78,F
+03D2:  RRF    79,F
+03D3:  MOVF   78,W
+03D4:  MOVWF  15
+03D5:  RRF    79,F
+03D6:  RRF    79,W
+03D7:  ANDLW  30
+03D8:  MOVWF  77
+03D9:  MOVF   17,W
+03DA:  ANDLW  CF
+03DB:  IORWF  77,W
+03DC:  MOVWF  17
+.................... } 
+03DD:  RETURN
+....................  
+.................... void leitura_temperatura(){ 
+03DE:  CLRF   38
+03DF:  CLRF   37
+....................   
+....................  int16 conv = 0; 
+....................  // Inicia conversão AD 
+....................  // Faz regra de 3 para converter o valor para mili volts 
+....................  
+....................  conv = (int16)(read_adc()*4.888); 
+03E0:  BSF    1F.2
+03E1:  BTFSC  1F.2
+03E2:  GOTO   3E1
+03E3:  MOVF   1E,W
+03E4:  MOVWF  7A
+03E5:  BSF    03.5
+03E6:  MOVF   1E,W
+03E7:  BCF    03.5
+03E8:  MOVWF  39
+03E9:  MOVF   1E,W
+03EA:  MOVWF  3A
+03EB:  MOVWF  3C
+03EC:  MOVF   39,W
+03ED:  MOVWF  3B
+03EE:  CALL   2F7
+03EF:  MOVF   7A,W
+03F0:  MOVWF  3E
+03F1:  MOVF   79,W
+03F2:  MOVWF  3D
+03F3:  MOVF   78,W
+03F4:  MOVWF  3C
+03F5:  MOVF   77,W
+03F6:  MOVWF  3B
+03F7:  MOVLW  7F
+03F8:  MOVWF  42
+03F9:  MOVLW  6A
+03FA:  MOVWF  41
+03FB:  MOVLW  1C
+03FC:  MOVWF  40
+03FD:  MOVLW  81
+03FE:  MOVWF  3F
+03FF:  CALL   314
+0400:  MOVF   7A,W
+0401:  MOVWF  3C
+0402:  MOVF   79,W
+0403:  MOVWF  3B
+0404:  MOVF   78,W
+0405:  MOVWF  3A
+0406:  MOVF   77,W
+0407:  MOVWF  39
+0408:  CALL   389
+0409:  MOVF   79,W
+040A:  MOVWF  38
+040B:  MOVF   78,W
+040C:  MOVWF  37
+....................   
+.................... // MSB =(int)(conv>>8); 
+.................... // LSB =(int)conv; 
+....................   
+....................  //enviando... 
+.................... // putc(MSB); 
+.................... // putc(LSB); 
+....................  
+.................... 	//Mandar para o MATLAB 
+....................  putc((int8)(conv>>8)); 
+040D:  MOVF   38,W
+040E:  CLRF   7A
+040F:  BTFSS  0C.4
+0410:  GOTO   40F
+0411:  MOVWF  19
+....................  putc((int8)(conv)); 
+0412:  MOVF   37,W
+0413:  BTFSS  0C.4
+0414:  GOTO   413
+0415:  MOVWF  19
+....................   
+.................... 	SAIDA = conv; 
+0416:  MOVF   38,W
+0417:  MOVWF  32
+0418:  MOVF   37,W
+0419:  MOVWF  31
+....................  UNIDADE[0] = ' '; 
+041A:  MOVLW  20
+041B:  MOVWF  33
+....................  UNIDADE[1] = 'm'; 
+041C:  MOVLW  6D
+041D:  MOVWF  34
+....................  UNIDADE[2] = 'V'; 
+041E:  MOVLW  56
+041F:  MOVWF  35
+.................... } 
+0420:  RETURN
+....................  
+.................... void leitura_velocidade(){ 
+*
+0457:  CLRF   38
+0458:  CLRF   37
+.................... 	 
+.................... 	int16 cont = 0; 
+.................... //	int MSB=0,LSB=0; 
+.................... 	 
+.................... 	//Rotações por Segundo 
+.................... 	cont = get_timer1(); 
+0459:  MOVF   0F,W
+045A:  MOVWF  7A
+045B:  MOVF   0E,W
+045C:  MOVWF  77
+045D:  MOVF   0F,W
+045E:  SUBWF  7A,W
+045F:  BTFSS  03.2
+0460:  GOTO   459
+0461:  MOVF   77,W
+0462:  MOVWF  37
+0463:  MOVF   7A,W
+0464:  MOVWF  38
+.................... 	set_timer1(0); 
+0465:  CLRF   0F
+0466:  CLRF   0E
+.................... 	 
+.................... //	MSB =(int)(venta/0x100); 
+.................... //	LSB =(int)venta; 
+.................... 	 
+.................... 	//Mandar para o MATLAB 
+....................  putc((int8)(cont>>8)); 
+0467:  MOVF   38,W
+0468:  CLRF   7A
+0469:  BTFSS  0C.4
+046A:  GOTO   469
+046B:  MOVWF  19
+....................  putc((int8)(cont)); 
+046C:  MOVF   37,W
+046D:  BTFSS  0C.4
+046E:  GOTO   46D
+046F:  MOVWF  19
+....................   
+.................... 	SAIDA = cont; 
+0470:  MOVF   38,W
+0471:  MOVWF  32
+0472:  MOVF   37,W
+0473:  MOVWF  31
+.................... 	UNIDADE[0] = 'P'; 
+0474:  MOVLW  50
+0475:  MOVWF  33
+.................... 	UNIDADE[1] = 'T'; 
+0476:  MOVLW  54
+0477:  MOVWF  34
+.................... 	UNIDADE[2] = 'a'; 
+0478:  MOVLW  61
+0479:  MOVWF  35
+....................   
+.................... }  
+047A:  RETURN
+.................... void parar_ventilador() 
+.................... { 
+.................... 	 
+.................... 	set_pwm2_duty(0); 
+*
+0488:  CLRF   1B
+.................... 	DUTY = 0; 
+0489:  CLRF   2E
+.................... 	SAIDA = 0; 
+048A:  CLRF   32
+048B:  CLRF   31
+048C:  CLRF   27
+048D:  BTFSC  0B.7
+048E:  BSF    27.7
+048F:  BCF    0B.7
+.................... 	 
+.................... 	//Escrever "   *PWM ZERO*   " 
+.................... 	comando_lcd(0xC0);                   // posiciona o cursor na linha 1, coluna 0 
+0490:  MOVLW  C0
+0491:  MOVWF  48
+0492:  CALL   057
+0493:  BTFSC  27.7
+0494:  BSF    0B.7
+.................... 	printf (escreve_lcd,"   *PWM ZERO*   "); // imprime mensagem no Lcd 
+0495:  MOVLW  34
+0496:  BSF    03.6
+0497:  MOVWF  0D
+0498:  MOVLW  00
+0499:  MOVWF  0F
+049A:  BCF    03.6
+049B:  CALL   1EB
+.................... 	temp1 = 60; 
+049C:  MOVLW  3C
+049D:  MOVWF  30
+.................... 	beep(3); 
+049E:  MOVLW  03
+049F:  MOVWF  37
+.................... 	set_timer1(0); 
+*
+04BD:  CLRF   0F
+04BE:  CLRF   0E
+.................... } 
+.................... void parar_calor() 
+.................... { 
+.................... 	 
+.................... 	set_pwm1_duty(0); 
+*
+04C0:  CLRF   15
+.................... 	DUTY = 0; 
+04C1:  CLRF   2E
+.................... 	SAIDA = 0; 
+04C2:  CLRF   32
+04C3:  CLRF   31
+04C4:  CLRF   27
+04C5:  BTFSC  0B.7
+04C6:  BSF    27.7
+04C7:  BCF    0B.7
+.................... 	 
+.................... 	//Escrever "   *PWM ZERO*   " 
+.................... 	comando_lcd(0xC0);                   // posiciona o cursor na linha 1, coluna 0 
+04C8:  MOVLW  C0
+04C9:  MOVWF  48
+04CA:  CALL   057
+04CB:  BTFSC  27.7
+04CC:  BSF    0B.7
+.................... 	printf (escreve_lcd,"   *PWM ZERO*   "); // imprime mensagem no Lcd 
+04CD:  MOVLW  3D
+04CE:  BSF    03.6
+04CF:  MOVWF  0D
+04D0:  MOVLW  00
+04D1:  MOVWF  0F
+04D2:  BCF    03.6
+04D3:  CALL   1EB
+.................... 	 
+.................... 	temp1 = 60; 
+04D4:  MOVLW  3C
+04D5:  MOVWF  30
+.................... 	 
+.................... }	 
+.................... void alterar(){  
+.................... 	switch(buffer[0]) 
+.................... 	{ 
+*
+047B:  MOVLW  30
+047C:  SUBWF  28,W
+047D:  ADDLW  F8
+047E:  BTFSC  03.0
+047F:  GOTO   4DE
+0480:  ADDLW  08
+0481:  GOTO   4E1
+.................... 		case '0':	pwm_resistor();	leitura_temperatura();			break; 
+0482:  CALL   3A8
+0483:  CALL   3DE
+0484:  GOTO   4DE
+.................... 		case '1':	pwm_ventilador();	leitura_velocidade();			break; 
+0485:  CALL   421
+0486:  CALL   457
+0487:  GOTO   4DE
+.................... 		case '2': parar_ventilador();			break; 
+*
+04BF:  GOTO   4DE
+.................... 		case '3':	parar_calor(); 					break;  
+*
+04D6:  GOTO   4DE
+.................... 		case '4':	pwm_resistor();				break; 
+04D7:  CALL   3A8
+04D8:  GOTO   4DE
+.................... 		case '5':	pwm_ventilador();			break; 
+04D9:  CALL   421
+04DA:  GOTO   4DE
+.................... 		case '6': leitura_temperatura();			break; 
+04DB:  CALL   3DE
+04DC:  GOTO   4DE
+.................... 		case '7':	leitura_velocidade(); 					break; 
+04DD:  CALL   457
+.................... 	} 
+.................... } 
+04DE:  BCF    0A.3
+04DF:  BCF    0A.4
+04E0:  GOTO   501 (RETURN)
+.................... void buffer_serial(){ 
+....................   
+....................  if(kbhit()){ 
+*
+04ED:  BTFSS  0C.5
+04EE:  GOTO   503
+....................   
+....................   buffer[i]=getc(); 
+04EF:  MOVLW  28
+04F0:  ADDWF  2F,W
+04F1:  MOVWF  04
+04F2:  BCF    03.7
+04F3:  BTFSS  0C.5
+04F4:  GOTO   4F3
+04F5:  MOVF   1A,W
+04F6:  MOVWF  00
+....................   if(buffer[i]=='\n'){ 
+04F7:  MOVLW  28
+04F8:  ADDWF  2F,W
+04F9:  MOVWF  04
+04FA:  BCF    03.7
+04FB:  MOVF   00,W
+04FC:  SUBLW  0A
+04FD:  BTFSS  03.2
+04FE:  GOTO   502
+....................     
+....................    i=0; 
+04FF:  CLRF   2F
+....................    alterar(); 
+0500:  GOTO   47B
+....................   } 
+....................   else{ 
+0501:  GOTO   503
+....................    i++; 
+0502:  INCF   2F,F
+....................   } 
+....................  } 
+.................... } 
+0503:  BCF    0A.3
+0504:  BCF    0A.4
+0505:  GOTO   51C (RETURN)
+....................  
+.................... void config() 
+.................... { 
+.................... 	//ponteiro do buffer 
+.................... 	i = 0; 
+*
+0242:  CLRF   2F
+.................... 	//Configurar conversor AD - ler temperatura 
+.................... 	setup_adc_ports(RA0_RA1_RA3_analog);  
+0243:  BSF    03.5
+0244:  BCF    1F.0
+0245:  BCF    1F.1
+0246:  BSF    1F.2
+0247:  BCF    1F.3
+.................... 	setup_adc (adc_clock_div_32);  
+0248:  BCF    1F.6
+0249:  BCF    03.5
+024A:  BCF    1F.6
+024B:  BSF    1F.7
+024C:  BSF    03.5
+024D:  BSF    1F.7
+024E:  BCF    03.5
+024F:  BSF    1F.0
+.................... 	//Canal 0 - temperatura 
+.................... 	set_adc_channel(0); 
+0250:  MOVLW  00
+0251:  MOVWF  78
+0252:  MOVF   1F,W
+0253:  ANDLW  C7
+0254:  IORWF  78,W
+0255:  MOVWF  1F
+.................... 	 
+.................... 	setup_timer_0(rtcc_internal | rtcc_div_256); 
+0256:  BSF    03.5
+0257:  MOVF   01,W
+0258:  ANDLW  C0
+0259:  IORLW  07
+025A:  MOVWF  01
+.................... 	 
+.................... 	//Tacômetro no pino RC0 - entrada do TMR1 
+.................... 	setup_timer_1(t1_external_sync|t1_div_by_1); 
+025B:  MOVLW  83
+025C:  BCF    03.5
+025D:  MOVWF  10
+.................... 	//Conversores AD e Buzzer (RA5) 
+.................... 	set_tris_a(0b11011111); 
+025E:  MOVLW  DF
+025F:  BSF    03.5
+0260:  MOVWF  05
+.................... 	//Botões (desativado) e ativadores de Displays de 7 segmentos (ativado) 
+.................... 	set_tris_b(0b00001111); 
+0261:  MOVLW  0F
+0262:  MOVWF  06
+.................... 	 
+.................... 	//Tacômetro no pino RC0 - entrada do TMR1 
+.................... 	//PWM para variar velocidade do ventilador - RC1 
+.................... 	//PWM para gerar calor - RC2 
+.................... 	set_tris_c(0b11111001); 
+0263:  MOVLW  F9
+0264:  MOVWF  07
+.................... 	 
+.................... 	//Saída para LCD e Displays de 7 segmentos 
+.................... 	set_tris_d(0b00000000); 
+0265:  MOVLW  00
+0266:  MOVWF  08
+.................... 	 
+.................... 	//E0 e E1 - Enable e Rs do LCD 
+.................... 	set_tris_e(0b100); 
+0267:  BCF    09.0
+0268:  BCF    09.1
+0269:  BSF    09.2
+.................... 	 
+.................... 	//Desativar Displays 
+.................... 	output_b(0b00000000); 
+026A:  BCF    03.5
+026B:  CLRF   06
+.................... 	//Configurar a frequência dos PWMs (1 kHz) 
+.................... 	setup_timer_2(T2_DIV_BY_4,249,1); 
+026C:  MOVWF  78
+026D:  IORLW  05
+026E:  MOVWF  12
+026F:  MOVLW  F9
+0270:  BSF    03.5
+0271:  MOVWF  12
+.................... 	 
+.................... 	//Pino RC1 como PWM 
+.................... 	setup_ccp2(ccp_pwm); 
+0272:  BCF    03.5
+0273:  BCF    07.1
+0274:  MOVLW  0C
+0275:  MOVWF  1D
+.................... 	//Pino RC2 como PWM 
+.................... 	setup_ccp1(ccp_pwm); 
+0276:  BCF    07.2
+0277:  MOVWF  17
+.................... 	 
+.................... 	//Pwm zero inicialmente 
+.................... 	DUTY = 0; 
+0278:  CLRF   2E
+.................... 	SAIDA = 0; 
+0279:  CLRF   32
+027A:  CLRF   31
+.................... 	set_pwm1_duty(0); 
+027B:  CLRF   15
+.................... 	set_pwm2_duty(0); 
+027C:  CLRF   1B
+.................... 	 
+.................... 	set_timer1(0); 
+027D:  CLRF   0F
+027E:  CLRF   0E
+027F:  CLRF   27
+0280:  BTFSC  0B.7
+0281:  BSF    27.7
+0282:  BCF    0B.7
+....................   //Ativar LCD 
+....................   inicializa_lcd(); 
+....................    
+.................... 	UNIDADE[0] = 'R'; 
+*
+02CA:  MOVLW  52
+02CB:  MOVWF  33
+.................... 	UNIDADE[1] = 'd'; 
+02CC:  MOVLW  64
+02CD:  MOVWF  34
+.................... 	UNIDADE[2] = 'y'; 
+02CE:  MOVLW  79
+02CF:  MOVWF  35
+02D0:  CLRF   27
+02D1:  BTFSC  0B.7
+02D2:  BSF    27.7
+02D3:  BCF    0B.7
+.................... 	 
+....................   comando_lcd(0x80);											// posiciona o cursor na linha 0, coluna 0 
+02D4:  MOVLW  80
+02D5:  MOVWF  48
+02D6:  CALL   057
+02D7:  BTFSC  27.7
+02D8:  BSF    0B.7
+.................... 	printf(escreve_lcd,"LAB.CONT.DIGITAL");	// imprime mensagem no Lcd 
+02D9:  MOVLW  46
+02DA:  BSF    03.6
+02DB:  MOVWF  0D
+02DC:  MOVLW  00
+02DD:  MOVWF  0F
+02DE:  BCF    03.6
+02DF:  CALL   1EB
+02E0:  CLRF   27
+02E1:  BTFSC  0B.7
+02E2:  BSF    27.7
+02E3:  BCF    0B.7
+.................... 	 
+.................... 	 
+.................... 	comando_lcd(0xC0);                   // posiciona o cursor na linha 1, coluna 0 
+02E4:  MOVLW  C0
+02E5:  MOVWF  48
+02E6:  CALL   057
+02E7:  BTFSC  27.7
+02E8:  BSF    0B.7
+.................... 	printf (escreve_lcd,"Seja Bem-Vindo!"); // imprime mensagem no Lcd 
+02E9:  MOVLW  4F
+02EA:  BSF    03.6
+02EB:  MOVWF  0D
+02EC:  MOVLW  00
+02ED:  MOVWF  0F
+02EE:  BCF    03.6
+02EF:  CALL   1EB
+.................... 	//4 Segundos 
+.................... 	temp1 = 60; 
+02F0:  MOVLW  3C
+02F1:  MOVWF  30
+.................... 	 
+.................... 	//Habilitar todas as interrupções 
+.................... 	enable_interrupts(GLOBAL| INT_RTCC);	 
+02F2:  MOVLW  E0
+02F3:  IORWF  0B,F
+.................... 	 
+.................... }	 
+02F4:  BCF    0A.3
+02F5:  BCF    0A.4
+02F6:  GOTO   51B (RETURN)
+....................  
+.................... void main(){ 
+*
+0506:  CLRF   04
+0507:  BCF    03.7
+0508:  MOVLW  1F
+0509:  ANDWF  03,F
+050A:  MOVLW  0C
+050B:  BSF    03.5
+050C:  MOVWF  19
+050D:  MOVLW  A6
+050E:  MOVWF  18
+050F:  MOVLW  90
+0510:  BCF    03.5
+0511:  MOVWF  18
+0512:  BSF    03.5
+0513:  BSF    1F.0
+0514:  BSF    1F.1
+0515:  BSF    1F.2
+0516:  BCF    1F.3
+0517:  MOVLW  07
+0518:  MOVWF  1C
+.................... 	config(); 
+0519:  BCF    03.5
+051A:  GOTO   242
+.................... 	while(TRUE){ 
+.................... 		buffer_serial(); 
+051B:  GOTO   4ED
+.................... 	} 
+051C:  GOTO   51B
+.................... } 
+.................... /********************************************************** 
+.................... *    Rotina de tratamento de interrupcao de TMR0          * 
+.................... ***********************************************************/ 
+....................  
+.................... //atualizar informações do lcd 
+....................  
+.................... #int_rtcc 
+.................... void trata_int_tmr0(void) 
+051D:  SLEEP
+.................... { 
+.................... 	if(temp1==0)               //ja passou um segundo 
+*
+0086:  MOVF   30,F
+0087:  BTFSS  03.2
+0088:  GOTO   1CE
+.................... 	{                       //Sim, 
+.................... 		tela_principal(); 
+.................... 		temp1 = 15; 
+*
+01CB:  MOVLW  0F
+01CC:  MOVWF  30
+.................... 	} 
+.................... 	else                       // Nao, 
+01CD:  GOTO   1CF
+.................... 	{ 
+.................... 		temp1--;                // Decrementa temp1 
+01CE:  DECF   30,F
+.................... 	} 
+....................  
+.................... } 
+....................  
+....................  
+01CF:  BCF    0B.2
+01D0:  BCF    0A.3
+01D1:  BCF    0A.4
+01D2:  GOTO   01B
+
+Configuration Fuses:
+   Word  1: 3F71   XT NOWDT PUT BROWNOUT NOLVP NOCPD NOWRT NODEBUG NOPROTECT
